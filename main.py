@@ -329,7 +329,7 @@ def test_model(pra_model, pra_data_loader):
 
 def run_trainval(pra_model, pra_traindata_path, pra_valdata_path, pra_testdata_path=None):
 	loader_train = data_loader(pra_traindata_path, pra_batch_size=batch_size_train, pra_shuffle=True, pra_drop_last=True, train_val_test='all')
-	loader_val = data_loader(pra_traindata_path, pra_batch_size=batch_size_val, pra_shuffle=False, pra_drop_last=False, train_val_test='all') 
+	loader_val = data_loader(pra_valdata_path, pra_batch_size=batch_size_val, pra_shuffle=False, pra_drop_last=False, train_val_test='all') 
 	if pra_testdata_path is not None:
 		loader_test = data_loader(pra_testdata_path, pra_batch_size=batch_size_train, pra_shuffle=True, pra_drop_last=True, train_val_test='all')
 
@@ -369,7 +369,7 @@ if __name__ == '__main__':
 
 	# train and evaluate model
 	# run_trainval(model, pra_traindata_path='/home/liz220/Documents/code/lyft/train_data.pkl', pra_testdata_path='/home/liz220/Documents/code/lyft/train_data.pkl')
-	run_trainval(model, pra_traindata_path='data/kitti_mots_converted/train_data.pkl', pra_valdata_path='data/kitti_mots/converted/val_data.pkl')
+	run_trainval(model, pra_traindata_path='data/kitti_mots_converted/train_data.pkl', pra_valdata_path='data/kitti_mots_converted/val_data.pkl')
 	# run_trainval(model, pra_traindata_path='/data/vci-dut/train_data.pkl', pra_testdata_path='/data/vci-dut/train_data.pkl')
 	
 	# pretrained_model_path = './GRIP_best_weights/best_model_epoch_0016.pt'

@@ -1,6 +1,6 @@
-import debugpy
-debugpy.listen(5678)
-debugpy.wait_for_client()  # blocks execution until client is attached
+# import debugpy
+# debugpy.listen(5678)
+# debugpy.wait_for_client()  # blocks execution until client is attached
 import numpy as np 
 import glob
 import os 
