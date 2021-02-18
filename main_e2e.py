@@ -149,9 +149,9 @@ def train_model(pra_model, pra_data_loader, pra_optimizer, pra_epoch_log):
         # print(data[0,:,0,0])
         for now_history_frames in range(1, data.shape[-2]):
             input_data = data[:,:,:now_history_frames,:] # (N, C, T, V)=(N, 4, 6, 120) ---> N*120, 4, 6 ---> N*120, 2, 6 --> (N, 2, 6, 120)
-            gt_data = no_norm_loc_data_gt[:,:2,now_history_frames:,:] 
+            gt_data = no_norm_loc_data_gt[:,:2,now_history_frames:,:].clone() 
             gt_data[:,:,1:] = gt_data[:,:,1:] - gt_data[:,:,:-1] # Starting from the 2nd frame in the future, GT object locations are substracted by its previous frame
-            gt_data[:,:,0] = gt_data[:,:,0] - no_norm_loc_data[:,:,now_history_frames-1] # The 1st frame in the future is substracted by the current observation (CenterTrack's prediction)
+            gt_data[:,:,0] = gt_data[:,:,0] - no_norm_loc_data[:,:,now_history_frames-1].clone() # The 1st frame in the future is substracted by the current observation (CenterTrack's prediction)
             output_loc_GT = gt_data # (N, 2, 12 - now_history_frame, V)
             # output_loc_GT = data[:,:2,now_history_frames:,:] # (N, C, T, V)=(N, 2, 6, 120)
             output_mask = data[:,-1:,now_history_frames:,:] # (N, C, T, V)=(N, 1, 6, 120)
