@@ -93,13 +93,16 @@ def process_data(pra_now_dict, pra_now_dict_gt, pra_start_ind, pra_end_ind, pra_
 		now_dict_gt_matched = {}
 		for idx1, idx2 in zip(*assignments):
 			now_dict_gt_matched[obj_ids_pred[idx1]] = pra_now_dict_gt[frame_ind][obj_ids_gt[idx2]]
-		for pred_id in obj_ids_pred: # if there are more detection than annotations
-			if pred_id not in now_dict_gt_matched.keys():
-				now_dict_gt_matched[pred_id] = np.zeros(total_feature_dimension-1) # we fill it with all zeros
+		obj_ids_gt_matched = list(now_dict_gt_matched.keys()) #Now
+#       for pred_id in obj_ids_pred: # if there are more detection than annotations
+#			if pred_id not in now_dict_gt_matched.keys():
+#				now_dict_gt_matched[pred_id] = np.zeros(total_feature_dimension-1) # we fill it with all zeros
 
 		now_frame_feature_dict = {obj_id : (list(pra_now_dict[frame_ind][obj_id]-mean_xy)+[1] if obj_id in visible_object_id_list else list(pra_now_dict[frame_ind][obj_id]-mean_xy)+[0]) for obj_id in pra_now_dict[frame_ind] }
-		now_frame_feature_gt_dict = {obj_id : (list(now_dict_gt_matched[obj_id]-mean_xy)+[1] if obj_id in visible_object_id_list else list(now_dict_gt_matched[obj_id]-mean_xy)+[0]) for obj_id in pra_now_dict[frame_ind]}
-
+#		now_frame_feature_gt_dict = {obj_id : (list(now_dict_gt_matched[obj_id]-mean_xy)+[1] if obj_id in visible_object_id_list else list(now_dict_gt_matched[obj_id]-mean_xy)+[0]) for obj_id in pra_now_dict[frame_ind]}
+		now_frame_feature_gt_dict = {obj_id : (list(now_dict_gt_matched[obj_id]-mean_xy)+[1] if obj_id in visible_object_id_list else list(now_dict_gt_matched[obj_id]-mean_xy)+[0]) for obj_id in now_dict_gt_matched}
+		for obj_id in (set(obj_ids_pred) - set(obj_ids_gt_matched)):
+			now_frame_feature_gt_dict[obj_id] = np.zeros(total_feature_dimension)
 		# if the current object is not at this frame, we return all 0s by using dict.get(_, np.zeros(11))
 		now_frame_feature = np.array([now_frame_feature_dict.get(vis_id, np.zeros(total_feature_dimension)) for vis_id in visible_object_id_list+non_visible_object_id_list])
 		now_frame_feature_gt = np.array([now_frame_feature_gt_dict.get(vis_id, np.zeros(total_feature_dimension)) for vis_id in visible_object_id_list+non_visible_object_id_list])

@@ -1,6 +1,6 @@
-import debugpy
-debugpy.listen(5678)
-debugpy.wait_for_client()  # blocks execution until client is attached
+#import debugpy
+#debugpy.listen(5678)
+#debugpy.wait_for_client()  # blocks execution until client is attached
 import argparse
 import os 
 import sys
@@ -151,7 +151,7 @@ def train_model(pra_model, pra_data_loader, pra_optimizer, pra_epoch_log):
             input_data = data[:,:,:now_history_frames,:] # (N, C, T, V)=(N, 4, 6, 120) ---> N*120, 4, 6 ---> N*120, 2, 6 --> (N, 2, 6, 120)
             gt_data = no_norm_loc_data_gt[:,:2,now_history_frames:,:].clone() 
             gt_data[:,:,1:] = gt_data[:,:,1:] - gt_data[:,:,:-1] # Starting from the 2nd frame in the future, GT object locations are substracted by its previous frame
-            gt_data[:,:,0] = gt_data[:,:,0] - no_norm_loc_data[:,:,now_history_frames-1].clone() # The 1st frame in the future is substracted by the current observation (CenterTrack's prediction)
+            gt_data[:,:,0] = gt_data[:,:,0] - no_norm_loc_data[:,:2,now_history_frames-1].clone() # The 1st frame in the future is substracted by the current observation (CenterTrack's prediction)
             output_loc_GT = gt_data # (N, 2, 12 - now_history_frame, V)
             # output_loc_GT = data[:,:2,now_history_frames:,:] # (N, C, T, V)=(N, 2, 6, 120)
             output_mask = data[:,-1:,now_history_frames:,:] # (N, C, T, V)=(N, 1, 6, 120)
@@ -342,7 +342,7 @@ def test_model(pra_model, pra_data_loader):
 
 def run_trainval(pra_model, pra_traindata_path, pra_valdata_path, pra_testdata_path=None):
     loader_train = data_loader(pra_traindata_path, pra_batch_size=batch_size_train, pra_shuffle=True, pra_drop_last=True, train_val_test='train')
-    loader_val = data_loader(pra_traindata_path, pra_batch_size=batch_size_val, pra_shuffle=False, pra_drop_last=False, train_val_test='val') 
+    loader_val = data_loader(pra_valdata_path, pra_batch_size=batch_size_val, pra_shuffle=False, pra_drop_last=False, train_val_test='val') 
     if pra_testdata_path is not None:
         loader_test = data_loader(pra_testdata_path, pra_batch_size=batch_size_train, pra_shuffle=True, pra_drop_last=True, train_val_test='all')
 
