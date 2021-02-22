@@ -56,7 +56,7 @@ def get_frame_instance_dict(pra_file_path):
     return now_dict
 
 
-def process_data(pra_now_dict, pra_now_dict_gt, pra_start_ind, pra_end_ind, pra_observed_last):
+def _process_data(pra_now_dict, pra_start_ind, pra_end_ind, pra_observed_last):
     # object_id appears at the last observed frame
     visible_object_id_list = list(pra_now_dict[pra_observed_last].keys())
     # number of current observed objects
@@ -68,7 +68,7 @@ def process_data(pra_now_dict, pra_now_dict_gt, pra_start_ind, pra_end_ind, pra_
     xy = visible_object_value[:, 3:5].astype(float)
     mean_xy = np.zeros_like(visible_object_value[0], dtype=float)
     m_xy = np.mean(xy, axis=0)
-    mean_xy[3:5] = m_xy
+    # mean_xy[3:5] = m_xy
 
     # compute distance between any pair of two objects
     dist_xy = spatial.distance.cdist(xy, xy)
@@ -86,72 +86,87 @@ def process_data(pra_now_dict, pra_now_dict_gt, pra_start_ind, pra_end_ind, pra_
 
     # for all history frames(6) or future frames(6), we only choose the objects listed in visible_object_id_list
     object_feature_list = []
-    object_feature_list_gt = []
     # non_visible_object_feature_list = []
     for frame_ind in range(pra_start_ind, pra_end_ind):
         # we add mark "1" to the end of each row to indicate that this row exists, using list(pra_now_dict[frame_ind][obj_id])+[1]
         # -mean_xy is used to zero_centralize data
         # now_frame_feature_dict = {obj_id : list(pra_now_dict[frame_ind][obj_id]-mean_xy)+[1] for obj_id in pra_now_dict[frame_ind] if obj_id in visible_object_id_list}
-
-        # =========== matching ===========
-        obj_ids_pred = list(pra_now_dict[frame_ind].keys())
-        obj_ids_gt = list(pra_now_dict_gt[frame_ind].keys())
-        xy_pred = [pra_now_dict[frame_ind][x][3:5] for x in obj_ids_pred]
-        xy_gt = [pra_now_dict_gt[frame_ind][x][3:5] for x in obj_ids_gt]
-        score = cdist(xy_pred, xy_gt)
-        assignments = linear_sum_assignment(score)
-        now_dict_gt_matched = {}
-        for idx1, idx2 in zip(*assignments):
-            now_dict_gt_matched[obj_ids_pred[idx1]
-                                ] = pra_now_dict_gt[frame_ind][obj_ids_gt[idx2]]
-        obj_ids_gt_matched = list(now_dict_gt_matched.keys())  # Now
-#       for pred_id in obj_ids_pred: # if there are more detection than annotations
-#			if pred_id not in now_dict_gt_matched.keys():
-#				now_dict_gt_matched[pred_id] = np.zeros(total_feature_dimension-1) # we fill it with all zeros
-
-        now_frame_feature_dict = {obj_id: (list(pra_now_dict[frame_ind][obj_id]-mean_xy)+[1] if obj_id in visible_object_id_list else list(
-            pra_now_dict[frame_ind][obj_id]-mean_xy)+[0]) for obj_id in pra_now_dict[frame_ind]}
-#		now_frame_feature_gt_dict = {obj_id : (list(now_dict_gt_matched[obj_id]-mean_xy)+[1] if obj_id in visible_object_id_list else list(now_dict_gt_matched[obj_id]-mean_xy)+[0]) for obj_id in pra_now_dict[frame_ind]}
-        now_frame_feature_gt_dict = {obj_id: (list(now_dict_gt_matched[obj_id]-mean_xy)+[1] if obj_id in visible_object_id_list else list(
-            now_dict_gt_matched[obj_id]-mean_xy)+[0]) for obj_id in now_dict_gt_matched}
-        for obj_id in (set(obj_ids_pred) - set(obj_ids_gt_matched)):
-            # now_frame_feature_gt_dict[obj_id] = np.zeros(
-                total_feature_dimension)
+        now_frame_feature_dict = {obj_id: (list(pra_now_dict[frame_ind][obj_id])+[1] if obj_id in visible_object_id_list else list(
+            pra_now_dict[frame_ind][obj_id])+[0]) for obj_id in pra_now_dict[frame_ind]}
         # if the current object is not at this frame, we return all 0s by using dict.get(_, np.zeros(11))
-        now_frame_feature=np.array([now_frame_feature_dict.get(vis_id, np.zeros(
-            total_feature_dimension)) for vis_id in visible_object_id_list+non_visible_object_id_list])
-        now_frame_feature_gt=np.array([now_frame_feature_gt_dict.get(vis_id, np.zeros(
+        now_frame_feature = np.array([now_frame_feature_dict.get(vis_id, np.zeros(
             total_feature_dimension)) for vis_id in visible_object_id_list+non_visible_object_id_list])
         object_feature_list.append(now_frame_feature)
-        object_feature_list_gt.append(now_frame_feature_gt)
 
     # object_feature_list has shape of (frame#, object#, 11) 11 = 10features + 1mark
-    object_feature_list=np.array(object_feature_list)
-    object_feature_list_gt=np.array(object_feature_list_gt)
+    object_feature_list = np.array(object_feature_list)
+
+    return object_feature_list, neighbor_matrix, m_xy, cur_num_objects
+
+
+def process_data(pra_now_dict, pra_now_dict_gt, pra_start_ind, pra_end_ind, pra_observed_last):
+    object_feature_list, neighbor_matrix, m_xy, cur_num_objects = _process_data(
+        pra_now_dict, pra_start_ind, pra_end_ind, pra_observed_last)
+    object_feature_list_gt, _, _, _ = _process_data(
+        pra_now_dict_gt, pra_start_ind, pra_end_ind, pra_observed_last)
+    # =========== matching ===========
+    # obj_ids_pred = list(pra_now_dict[pra_observed_last].keys())
+    # obj_ids_gt = list(pra_now_dict_gt[pra_observed_last].keys())
+    # (T, V1, C) -- > (V1, T, C)
+    object_feature_list = np.array(object_feature_list)  # (12, 4, 6)
+    object_feature_list_gt = np.array(object_feature_list_gt)  # (12, 4, 6)
+    object_feature_list_gt_matched = np.zeros_like(object_feature_list)
+
+    """
+    5 0 Van         5.021277 14.275029 
+    5 1 Cyclist     1.895126 5.811552  
+    5 2 Pedestrian  6.569396 6.974853  
+    5 3 Van         10.850808 40.289896 
+    """
+
+    xy_pred = object_feature_list[5, :, 3:5]  # (4,2)
+    xy_gt = object_feature_list_gt[5, :, 3:5]  # (4,2)
+
+    score = cdist(xy_pred, xy_gt)
+    score[(xy_pred == [0, 0]).all(1)] = 1e5
+    score[:, (xy_gt == [0, 0]).all(1)] = 1e5
+
+    assignments = linear_sum_assignment(score)
+
+    for idx1, idx2 in zip(*assignments):
+        if score[idx1, idx2] > 20:
+            continue
+        object_feature_list_gt_matched[:,
+                                       idx1] = object_feature_list_gt[:, idx2]
+
+    object_feature_list_gt_matched[:, :, 1] = object_feature_list[:, :, 1]
+
+    # object_feature_list has shape of (frame#, object#, 11) 11 = 10features + 1mark
     # object feature with a shape of (frame#, object#, 11) -> (object#, frame#, 11)
-    object_frame_feature=np.zeros(
+    object_frame_feature = np.zeros(
         (max_num_object, pra_end_ind-pra_start_ind, total_feature_dimension))
-    object_frame_feature_gt=np.zeros(
+    object_frame_feature_gt = np.zeros(
         (max_num_object, pra_end_ind-pra_start_ind, total_feature_dimension))
 
+    num_visible_object = object_feature_list.shape[1]
     # np.transpose(object_feature_list, (1,0,2))
-    object_frame_feature[:num_visible_object +
-                         num_non_visible_object] = np.transpose(object_feature_list, (1, 0, 2))
-    object_frame_feature_gt[: num_visible_object +
-                            num_non_visible_object] = np.transpose(object_feature_list_gt, (1, 0, 2))
+    object_frame_feature[:cur_num_objects] = np.transpose(
+        object_feature_list, (1, 0, 2))
+    object_frame_feature_gt[:cur_num_objects] = np.transpose(
+        object_feature_list_gt_matched, (1, 0, 2))
 
     return object_frame_feature, object_frame_feature_gt, neighbor_matrix, m_xy, cur_num_objects
 
 
 def generate_train_data(pra_file_pred, pra_file_gt):
     '''
-    Read data from $pra_file_path, and split data into clips with $total_frames length.
+    Read data from $pra_file_path, and split data into clips with $total_frames length. 
     Return: feature and adjacency_matrix
-            feture: (N, C, T, V)
-                    N is the number of training data
+            feture: (N, C, T, V) 
+                    N is the number of training data 
                     C is the dimension of features, 10raw_feature + 1mark(valid data or not)
                     T is the temporal length of the data. history_frames + future_frames
-                    V is the maximum number of objects. zero-padding for less objects.
+                    V is the maximum number of objects. zero-padding for less objects. 
     '''
     now_dict_pred = get_frame_instance_dict(pra_file_pred)
     now_dict_gt = get_frame_instance_dict(pra_file_gt)
@@ -161,7 +176,7 @@ def generate_train_data(pra_file_pred, pra_file_gt):
     all_feature_gt_list = []
     all_adjacency_list = []
     all_mean_list = []
-    for start_ind in frame_id_set[: -total_frames+1]:
+    for start_ind in frame_id_set[:-total_frames+1]:
         start_ind = int(start_ind)
         end_ind = int(start_ind + total_frames)
         observed_last = start_ind + history_frames - 1
