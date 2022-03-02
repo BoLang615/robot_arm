@@ -1,4 +1,6 @@
 __pycache__/
 .DS_Store
 .vscode/
-GRIP_best_weights/
+dataset/
+checkpoints/
+*.log
