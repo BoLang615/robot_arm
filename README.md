@@ -27,7 +27,7 @@ For combine action, use combine_file.py to generate the aggregated *.txt.
 
 
 
-Use the following command to start a training for seperate action. 
+Use the following command to start a training for different actions. 
 Arguments could be set in argument_parser.py.
 
 ```bash
