@@ -37,7 +37,7 @@ parser.add_argument('--seed',
                     default=123)
 
 parser.add_argument('--downsample_rate',
-                    help='downsample rate for each seq',
+                    help='downsample rate for each episode',
                     type=int,
                     default=10)
 
@@ -49,7 +49,7 @@ parser.add_argument('--sliding_window',
 parser.add_argument("--epochs",
                     help="number of iterations to train for",
                     type=int,
-                    default=1)
+                    default=10)
 
 parser.add_argument('--lr',
                     help='learning rate',
@@ -60,6 +60,7 @@ parser.add_argument('--classes',
                     help='num of action classes',
                     type=int,
                     default=3)
+
 parser.add_argument('--checkpoint', default='', type=str)
 parser.add_argument('--start_epoch', default=1, type=int)
 parser.add_argument('--save_prediction',

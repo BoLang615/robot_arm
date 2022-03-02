@@ -12,9 +12,9 @@ from tqdm import tqdm
 from argument_parser import args
 from testloader import data_loader
 #import torchsnooper
-import debugpy
-debugpy.listen(5679)
-debugpy.wait_for_client()
+# import debugpy
+# debugpy.listen(5679)
+# debugpy.wait_for_client()
 
 classes = {0: 'drawer',
            1: 'pick',

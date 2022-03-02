@@ -9,9 +9,7 @@ from torch.utils import data
 from argument_parser import args
 import json
 import random
-import debugpy
-debugpy.listen(5678)
-debugpy.wait_for_client()
+
 
 def chunks(lst, n):
     for i in range(0, len(lst), n):
@@ -25,7 +23,7 @@ class DataLayer(data.Dataset):
         self.split = split
         self.batch_size = args.batch_size if split != 'test' else 1
         self.downsample_rate = args.downsample_rate
-        self.sliding_window_size = 10
+
         self.action = {'drawer': 0,
                        'pick': 1,
                        'stir': 2,
