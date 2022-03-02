@@ -14,9 +14,9 @@ from tqdm import tqdm
 from argument_parser import args
 from dataloader import DataLayer, build_data_loader
 #import torchsnooper
-import debugpy
-debugpy.listen(5679)
-debugpy.wait_for_client()
+# import debugpy
+# debugpy.listen(5679)
+# debugpy.wait_for_client()
 
 classes = {0: 'drawer',
            1: 'pick',
@@ -88,6 +88,7 @@ def val(model, val_gen, criterion, args):
 			print(f'Predicted: {seq_info[0]}', 'Action: ',' '.join(f'{classes[int(predicted[j])]:5s}'
 										for j in range(batch_size)))
 			total_loss += loss.item()* batch_size
+   
 	print('Accuracy of the network on the test set: %d %%' % (
     100 * correct / total))		
 
@@ -100,8 +101,6 @@ def val(model, val_gen, criterion, args):
 	return total_loss
 
 
-
-            
 
    
 
