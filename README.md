@@ -1,7 +1,6 @@
 ### Prepare data
 
 ```
-# For nuScenes Dataset         
 └── dataset
        ├── train       <-- train set
               ├── drawer
